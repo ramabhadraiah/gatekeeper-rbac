@@ -1,0 +1,26 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build: .
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=dev-secret
+      - LOG_LEVEL=INFO
+      - RATE_LIMIT_LOGIN=10
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  worker:
+    build: .
+    command: celery -A app.celery_app:celery_app worker --loglevel=INFO
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+
